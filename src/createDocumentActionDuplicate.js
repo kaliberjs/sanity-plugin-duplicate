@@ -26,8 +26,8 @@ export function createDocumentActionDuplicate(documentSchemes) {
         
         const replacementFunctions = documentTypes?.[type]
         const replacementData = Object.fromEntries(
-          Object.entries(replacementFunctions || []).map(
-            ([fieldName, replacement]) =>
+          Object.entries(replacementFunctions || [])
+          .map(([fieldName, replacement]) =>
             [fieldName, typeof replacement === 'function' ? replacement(currentContent[fieldName]) : replacement]
           )
         )
