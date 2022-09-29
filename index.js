@@ -1,1 +1,1 @@
-export { createDocumentActionDuplicate } from './src/createDocumentActionDuplicate'
+export { createDocumentActionDuplicate } from './lib/createDocumentActionDuplicate'
