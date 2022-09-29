@@ -65,7 +65,7 @@ const doc = {
       type: 'text',
       name: 'title',
       kaliberOptions: {
-        duplicate: 'duplicated title'
+        duplicate: 'fixed title'
       }
     },
     {
@@ -73,6 +73,13 @@ const doc = {
       name: 'index',
       kaliberOptions: {
         duplicate: index => index + 1
+      }
+    },
+    {
+      type: 'string',
+      name: 'translationId',
+      kaliberOptions: {
+        duplicate: () => uuid.v4()
       }
     },
     {

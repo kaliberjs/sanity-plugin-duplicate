@@ -8,10 +8,10 @@ const client = sanityClient.withConfig({
   apiVersion: '2022-04-06'
 })
 
-
 export function createDocumentActionDuplicate(documentSchemes) {
   const documentTypes = getReplacementFunctionsForAllSchemes(documentSchemes)
   const i18n = getI18n(pluginConfig.language)
+  
   return function DocumentActionDuplicate({ type, published, draft }) {
     const router = useRouter()
     return {
