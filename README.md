@@ -52,6 +52,40 @@ Then add the `part:@sanity/base/document-actions/resolver` part to the parts arr
 
 ---
 
+### Adding custom duplicate value to field
+
+You can define custom duplicate values by adding `kaliberOptions: { duplicate: ...}` to your document scheme.
+
+```js
+const doc = {
+  type: 'document',
+  name: 'post',
+  fields: [
+    {
+      type: 'text',
+      name: 'title',
+      kaliberOptions: {
+        duplicate: 'duplicated title'
+      }
+    },
+    {
+      type: 'number',
+      name: 'index',
+      kaliberOptions: {
+        duplicate: index => index + 1
+      }
+    },
+    {
+      type: 'slug',
+      name: 'slug',
+      kaliberOptions: {
+        duplicate: slug => ({type: 'slug', current: `${slug.current}-duplicate`})
+      }
+    }
+  ]
+}
+```
+
 ## Development
 
 ```
