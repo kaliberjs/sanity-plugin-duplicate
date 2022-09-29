@@ -1,1 +1,1 @@
-export { hello } from './src/hello'
+export { createDocumentActionDuplicate } from './src/createDocumentActionDuplicate'
