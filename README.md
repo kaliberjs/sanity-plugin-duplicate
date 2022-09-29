@@ -25,12 +25,20 @@ _`admin/sanity.json`_
 To add the actual document actions, you have to add them to the default document actions. To do this, in your sanity folder create a file called `resolveDocumentActions.js` and add the following:
 
 ```js
-import defaultResolve from 'part:@sanity/base/document-actions'
-import { DocumentActionProductionPreview, DocumentActionProductionReview } from '@kaliber/sanity-plugin-preview'
+import { singletonDocuments, documents } from './schemas/schema'
+import { createDocumentActionDuplicate } from '@kaliber/sanity-plugin-duplicate'
+
+const DocumentActionDuplicate = createDocumentActionDuplicate([...singletonDocuments, ...documents])
 
 export default function resolveDocumentActions(props) {
-  return [...defaultResolve(props), DocumentActionProductionPreview, DocumentActionProductionReview]
+  return [
+    ...defaultResolve(props).filter(action => action?.name !== 'DuplicateAction'),
+    DocumentActionDuplicate,
+    DocumentActionProductionPreview,
+    DocumentActionProductionReview
+  ]
 }
+
 ```
 
 Then add the `part:@sanity/base/document-actions/resolver` part to the parts array in `sanity.json`:
