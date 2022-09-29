@@ -11,7 +11,7 @@ const client = sanityClient.withConfig({
 export function createDocumentActionDuplicate(documentSchemes) {
   const documentTypes = getReplacementFunctionsForAllSchemes(documentSchemes)
   const i18n = getI18n(pluginConfig.language)
-  
+
   return function DocumentActionDuplicate({ type, published, draft }) {
     const router = useRouter()
     return {
@@ -19,18 +19,20 @@ export function createDocumentActionDuplicate(documentSchemes) {
       label: 'Duplicate',
       title:  i18n['duplicate'],
       onHandle: async () => {
-        const { _id, _createdAt, _updatedAt, ...current } = draft || published
+        const currentDoc = draft || published
+        if (!currentDoc) return
 
-        if (!current) return
-
+        const { _id, _createdAt, _updatedAt, ...currentContent} = currentDoc
+        
         const replacementFunctions = documentTypes?.[type]
         const replacementData = Object.fromEntries(
-          Object.entries(replacementFunctions || []).map(([k, v]) =>
-            [k, typeof v === 'function' ? v(current[k]) : v]
+          Object.entries(replacementFunctions || []).map(
+            ([fieldName, replacement]) =>
+            [fieldName, typeof replacement === 'function' ? replacement(currentContent[fieldName]) : replacement]
           )
         )
 
-        const doc = { ...current, ...replacementData, _id: 'drafts.' }
+        const doc = { ...currentContent, ...replacementData, _id: 'drafts.' }
         const created = await client.create(doc)
         router.navigateIntent('edit', { id: created._id, type })
       },
