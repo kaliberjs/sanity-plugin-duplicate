@@ -4,6 +4,7 @@ import { i18n as getI18n } from './i18n'
 import { useRouter } from '@sanity/base/router'
 import pluginConfig from 'config:@kaliber/sanity-plugin-duplicate'
 import schema from 'part:@sanity/base/schema'
+import React from 'react'
 
 const client = sanityClient.withConfig({
   apiVersion: '2022-04-06'
@@ -12,11 +13,14 @@ const client = sanityClient.withConfig({
 export function DocumentActionDuplicate({ type, published, draft }) {
   const router = useRouter()
   const i18n = getI18n(pluginConfig.language)
+  const [isDuplicating, setDuplicating] = React.useState(false)
   return {
     icon: CopyIcon,
-    label: 'Duplicate',
+    disabled: isDuplicating,
+    label: isDuplicating ? i18n['duplicating'] : i18n['duplicate'],
     title: i18n['duplicate'],
     onHandle: async () => {
+      setDuplicating(true)
       const currentDoc = draft || published
       if (!currentDoc) return
       
@@ -32,6 +36,7 @@ export function DocumentActionDuplicate({ type, published, draft }) {
       const doc = { ...currentContent, ...replacementData, _id: 'drafts.' }
       const created = await client.create(doc)
       router.navigateIntent('edit', { id: created._id, type })
+      setDuplicating(false)
     },
   }
 }
