@@ -27,9 +27,7 @@ export function DocumentActionDuplicate({ type, published, draft }) {
         const { _id, _createdAt, _updatedAt, ...currentContent } = currentDoc
         const replacementFunctions = getReplacementFunctions(schema.get(type))
         const replacementData = Object.fromEntries(replacementFunctions
-          .map(([fieldName, replacement]) =>
-            [fieldName, typeof replacement === 'function' ? replacement(currentContent[fieldName]) : replacement]
-          )
+          .map(([fieldName, replacement]) =>[fieldName,replacement(currentContent[fieldName])])
         )
 
         const doc = { ...currentContent, ...replacementData, _id: 'drafts.' }
@@ -55,5 +53,8 @@ export function DocumentActionDuplicate({ type, published, draft }) {
 function getReplacementFunctions(schema) {
   return schema.fields
     .filter(x => ![undefined, null].includes(x.type.kaliberOptions?.duplicate))
-    .map(field => [field.name, field.type.kaliberOptions.duplicate])
+    .map(field => {
+      const duplicateValueOrFunction = field.type.kaliberOptions.duplicate
+      return [field.name, typeof duplicateValueOrFunction === 'function' ? duplicateValueOrFunction : () => duplicateValueOrFunction]
+    })
 }
