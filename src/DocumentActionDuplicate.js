@@ -1,8 +1,6 @@
 import sanityClient from 'part:@sanity/base/client'
 import { CopyIcon } from '@sanity/icons'
-import { i18n as getI18n } from './i18n'
 import { useRouter } from '@sanity/base/router'
-import pluginConfig from 'config:@kaliber/sanity-plugin-duplicate'
 import schema from 'part:@sanity/base/schema'
 import React from 'react'
 
@@ -12,14 +10,16 @@ const client = sanityClient.withConfig({
 
 export function DocumentActionDuplicate({ type, published, draft }) {
   const router = useRouter()
-  const i18n = getI18n(pluginConfig.language)
   const [isDuplicating, setDuplicating] = React.useState(false)
+  const [error, setError] = React.useState(false)
+
   return {
     icon: CopyIcon,
     disabled: isDuplicating,
-    label: isDuplicating ? i18n['duplicating'] : i18n['duplicate'],
-    title: i18n['duplicate'],
+    label: isDuplicating ? 'Duplicating' : 'Duplicate',
+    title: 'Duplicate',
     onHandle: async () => {
+      try {
       setDuplicating(true)
       const currentDoc = draft || published
       if (!currentDoc) return
@@ -37,7 +37,18 @@ export function DocumentActionDuplicate({ type, published, draft }) {
       const created = await client.create(doc)
       router.navigateIntent('edit', { id: created._id, type })
       setDuplicating(false)
+      } catch {
+        setError(true)
+      }
     },
+    dialog: error && {
+      onClose: () => {
+        setError(false)
+        setDuplicating(false)
+      },
+      type: 'modal',
+      content: 'Something went wrong with duplicating. Please try again.'
+    }
   }
 }
 
