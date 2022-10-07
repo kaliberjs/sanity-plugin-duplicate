@@ -5,7 +5,6 @@
   "include": [
     "./src/**/*",
     "./node_modules/**.*",
-    "./types/**/*"
   ],
   "compilerOptions": {
     "moduleResolution": "node",
