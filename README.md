@@ -8,18 +8,6 @@ Adds (usable) duplicate document action to Sanity.
 > yarn add @kaliber/sanity-plugin-duplicate
 ```
 
-_`admin/sanity.json`_
-
-```json
-{
-  "plugins": [
-    "@kaliber/sanity-plugin-duplicate",
-    ...
-  ],
-  ...
-}
-```
-
 ### Adding the custom document actions
 
 To add the actual document actions, you have to add them to the default document actions. To do this, in your sanity folder create a file called `resolveDocumentActions.js` and add the following:
