@@ -11,8 +11,7 @@
     "build": "sanipack build",
     "watch": "sanipack build --watch",
     "verify": "sanipack verify",
-    "prepublishOnly": "sanipack build && sanipack verify",
-    "prepare": "[ -f scripts/addPeerDependencies.js ] && node scripts/addPeerDependencies.js"
+    "prepublishOnly": "sanipack build && sanipack verify"
   },
   "repository": {
     "type": "git",
@@ -24,14 +23,12 @@
     "duplicate"
   ],
   "files": [
-    "index.js",
     "src/**",
     "lib/**",
     "LICENSE",
-    "readme.md",
+    "README.md",
     "package.json",
-    "sanity.json",
-    "config.dist.json"
+    "sanity.json"
   ],
   "private": false,
   "license": "MIT",
