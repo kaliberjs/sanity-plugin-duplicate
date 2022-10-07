@@ -13,12 +13,13 @@ Adds (usable) duplicate document action to Sanity.
 To add the actual document actions, you have to add them to the default document actions. To do this, in your sanity folder create a file called `resolveDocumentActions.js` and add the following:
 
 ```js
-import { singletonDocuments, documents } from './schemas/schema'
+import defaultResolve, { DuplicateAction } from 'part:@sanity/base/document-actions'
+import { singletonDocuments, documents, DuplicateAction } from './schemas/schema'
 import { DocumentActionDuplicate } from '@kaliber/sanity-plugin-duplicate'
 
 export default function resolveDocumentActions(props) {
   return [
-    ...defaultResolve(props).map(x => x?.name === 'DuplicateAction' ? DocumentActionDuplicate : x),
+    ...defaultResolve(props).map(x => x === DuplicateAction ? DocumentActionDuplicate : x),
     DocumentActionProductionPreview,
     DocumentActionProductionReview
   ]
