@@ -20,23 +20,22 @@ export function DocumentActionDuplicate({ type, published, draft }) {
     title: 'Duplicate',
     onHandle: async () => {
       try {
-      setDuplicating(true)
-      const currentDoc = draft || published
-      if (!currentDoc) return
-      
-      const { _id, _createdAt, _updatedAt, ...currentContent } = currentDoc
-      const replacementFunctions = getReplacementFunctions(schema.get(type))
-      const replacementData = Object.fromEntries(
-        Object.entries(replacementFunctions || [])
+        setDuplicating(true)
+        const currentDoc = draft || published
+        if (!currentDoc) return
+
+        const { _id, _createdAt, _updatedAt, ...currentContent } = currentDoc
+        const replacementFunctions = getReplacementFunctions(schema.get(type))
+        const replacementData = Object.fromEntries(replacementFunctions
           .map(([fieldName, replacement]) =>
             [fieldName, typeof replacement === 'function' ? replacement(currentContent[fieldName]) : replacement]
           )
-      )
+        )
 
-      const doc = { ...currentContent, ...replacementData, _id: 'drafts.' }
-      const created = await client.create(doc)
-      router.navigateIntent('edit', { id: created._id, type })
-      setDuplicating(false)
+        const doc = { ...currentContent, ...replacementData, _id: 'drafts.' }
+        const created = await client.create(doc)
+        router.navigateIntent('edit', { id: created._id, type })
+        setDuplicating(false)
       } catch {
         setError(true)
       }
@@ -54,7 +53,7 @@ export function DocumentActionDuplicate({ type, published, draft }) {
 
 
 function getReplacementFunctions(schema) {
-  return Object.fromEntries(schema.fields
+  return schema.fields
     .filter(x => ![undefined, null].includes(x.type.kaliberOptions?.duplicate))
-    .map(field => [field.name, field.type.kaliberOptions.duplicate]))
+    .map(field => [field.name, field.type.kaliberOptions.duplicate])
 }
