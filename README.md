@@ -14,7 +14,7 @@ To add the actual document actions, you have to add them to the default document
 
 ```js
 import defaultResolve, { DuplicateAction } from 'part:@sanity/base/document-actions'
-import { singletonDocuments, documents, DuplicateAction } from './schemas/schema'
+import { singletonDocuments, documents } from './schemas/schema'
 import { DocumentActionDuplicate } from '@kaliber/sanity-plugin-duplicate'
 
 export default function resolveDocumentActions(props) {
