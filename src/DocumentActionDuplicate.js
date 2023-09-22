@@ -1,5 +1,6 @@
 import { CopyIcon } from '@sanity/icons'
 import { useRouter } from 'sanity/router'
+import { clear } from './clear'
 
 export function DocumentActionDuplicate({ document, schema, schemaType, getClient, reportError, onComplete }) {
   const router = useRouter()
@@ -47,24 +48,63 @@ export function DocumentActionDuplicate({ document, schema, schemaType, getClien
 }
 
 async function duplicate(document, { documentSchema, client }) {
-  const { _id, _createdAt, _updatedAt, ...currentContent } = document
-  // TODO: this is not good enough - nested objects will be missed
-  const replacementFunctions = getReplacementFunctions(documentSchema)
-  const replacementData = Object.fromEntries(replacementFunctions
-    .map(([fieldName, replacement]) =>[fieldName, replacement(currentContent[fieldName])])
-  )// TODO, handle clear even though it already works because as a symbol it's not serialized to JSON
+  const copy = duplicateRecursive({ object: document, objectSchema: documentSchema, includeNonDeclaredKeys: false })
 
-  const doc = { ...currentContent, ...replacementData, _id: 'drafts.' }
-  const created = await client.create(doc)
+  const created = await client.create({ ...copy, _id: 'drafts.' })
   
   return { id: created._id.replace('drafts.', '') }
 }
 
-function getReplacementFunctions(schema) {
-  return schema.fields
-    .filter(x => x.type.options?.kaliber?.duplicate !== undefined)
-    .map(field => {
-      const duplicateValueOrFunction = field.type.options.kaliber.duplicate
-      return [field.name, typeof duplicateValueOrFunction === 'function' ? duplicateValueOrFunction : () => duplicateValueOrFunction]
+
+function duplicateRecursive({ object, objectSchema, includeNonDeclaredKeys }) {
+  const fromFields = Object.fromEntries(
+    objectSchema.fields.flatMap(field => {
+      const key = field.name
+      
+      if (!(key in object)) return []
+
+      const originalValue = object[key]
+      const replaceValue = getReplaceValueFunction(field)
+      const replacementValue = replaceValue?.(originalValue)
+
+      if (replacementValue === clear) return []
+
+      return [[
+        key, 
+        replaceValue ? replacementValue :
+        field.type.fields ? duplicateRecursive({ 
+          object: object[key] || {}, 
+          objectSchema: field.type, 
+          includeNonDeclaredKeys: true 
+        }) :
+        field.type.name === 'array' ? duplicateRecursiveArray({ 
+          array: object[key] || [], 
+          arraySchemas: field.type.of 
+        }) :
+        originalValue
+      ]]
     })
+  )
+
+  return {
+    _type: object._type,
+    ...(includeNonDeclaredKeys && object),
+    ...fromFields,
+  }
+}
+
+function duplicateRecursiveArray({ array, arraySchemas }) {
+  return array.map(object => {
+    const objectSchema = arraySchemas.find(objectSchema => objectSchema.name === object._type)
+    return duplicateRecursive({ object, objectSchema, includeNonDeclaredKeys: true })  
+  })
+}
+
+function getReplaceValueFunction(field) {
+  const replaceValueOrFunction = field.type.options?.kaliber?.duplicate
+  return replaceValueOrFunction && (
+    typeof replaceValueOrFunction === 'function' 
+      ? replaceValueOrFunction 
+      : () => replaceValueOrFunction
+  )
 }
