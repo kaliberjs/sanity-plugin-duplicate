@@ -1,60 +1,110 @@
-import sanityClient from 'part:@sanity/base/client'
 import { CopyIcon } from '@sanity/icons'
-import { useRouter } from '@sanity/base/router'
-import schema from 'part:@sanity/base/schema'
-import React from 'react'
+import { useRouter } from 'sanity/router'
+import { clear } from './clear'
 
-const client = sanityClient.withConfig({
-  apiVersion: '2022-04-06'
-})
-
-export function DocumentActionDuplicate({ type, published, draft }) {
+export function DocumentActionDuplicate({ document, schema, schemaType, getClient, reportError, onComplete }) {
   const router = useRouter()
   const [isDuplicating, setDuplicating] = React.useState(false)
   const [error, setError] = React.useState(false)
+  
+  const documentSchema = schema.get(schemaType)
+  const client = getClient({ apiVersion: '2023-09-22' })
 
+  /** @type {ReturnType<import('sanity').DocumentActionComponent>} */
   return {
     icon: CopyIcon,
-    disabled: isDuplicating,
+    disabled: isDuplicating || !document,
     label: isDuplicating ? 'Duplicating' : 'Duplicate',
     title: 'Duplicate',
     onHandle: async () => {
       try {
         setDuplicating(true)
-        const currentDoc = draft || published
-        if (!currentDoc) return
-
-        const { _id, _createdAt, _updatedAt, ...currentContent } = currentDoc
-        const replacementFunctions = getReplacementFunctions(schema.get(type))
-        const replacementData = Object.fromEntries(replacementFunctions
-          .map(([fieldName, replacement]) =>[fieldName,replacement(currentContent[fieldName])])
-        )
-
-        const doc = { ...currentContent, ...replacementData, _id: 'drafts.' }
-        const created = await client.create(doc)
-        router.navigateIntent('edit', { id: created._id, type })
+        const { id } = await duplicate(document, { documentSchema, client })
+        navigateToDocument(id, { schemaType })
         setDuplicating(false)
-      } catch {
-        setError(true)
+        onComplete()
+      } catch (e) {
+        reportError(e)
+        setError(e)
       }
     },
-    dialog: error && {
-      onClose: () => {
-        setError(false)
-        setDuplicating(false)
-      },
-      type: 'modal',
-      content: 'Something went wrong with duplicating. Please try again.'
-    }
+    dialog: error 
+      ? {
+        type: 'dialog',
+        header: 'Problem duplicating',
+        content: 'Something went wrong with duplicating. If this problem persists, please contact an administrator.',
+        onClose: () => {
+          setError(false)
+          setDuplicating(false)
+        },
+        width: 'small'
+      }
+      : null
+  }
+
+  function navigateToDocument(id, { schemaType }) {
+    router.navigateIntent('edit', { id, type: schemaType })
   }
 }
 
+async function duplicate(document, { documentSchema, client }) {
+  const copy = duplicateRecursive({ object: document, objectSchema: documentSchema, includeNonDeclaredKeys: false })
 
-function getReplacementFunctions(schema) {
-  return schema.fields
-    .filter(x => ![undefined, null].includes(x.type.kaliberOptions?.duplicate))
-    .map(field => {
-      const duplicateValueOrFunction = field.type.kaliberOptions.duplicate
-      return [field.name, typeof duplicateValueOrFunction === 'function' ? duplicateValueOrFunction : () => duplicateValueOrFunction]
+  const created = await client.create({ ...copy, _id: 'drafts.' })
+  
+  return { id: created._id.replace('drafts.', '') }
+}
+
+
+function duplicateRecursive({ object, objectSchema, includeNonDeclaredKeys }) {
+  const fromFields = Object.fromEntries(
+    objectSchema.fields.flatMap(field => {
+      const key = field.name
+      
+      if (!(key in object)) return []
+
+      const originalValue = object[key]
+      const replaceValue = getReplaceValueFunction(field)
+      const replacementValue = replaceValue?.(originalValue)
+
+      if (replacementValue === clear) return []
+
+      return [[
+        key, 
+        replaceValue ? replacementValue :
+        field.type.fields ? duplicateRecursive({ 
+          object: object[key] || {}, 
+          objectSchema: field.type, 
+          includeNonDeclaredKeys: true 
+        }) :
+        field.type.name === 'array' ? duplicateRecursiveArray({ 
+          array: object[key] || [], 
+          arraySchemas: field.type.of 
+        }) :
+        originalValue
+      ]]
     })
+  )
+
+  return {
+    _type: object._type,
+    ...(includeNonDeclaredKeys && object),
+    ...fromFields,
+  }
+}
+
+function duplicateRecursiveArray({ array, arraySchemas }) {
+  return array.map(object => {
+    const objectSchema = arraySchemas.find(objectSchema => objectSchema.name === object._type)
+    return duplicateRecursive({ object, objectSchema, includeNonDeclaredKeys: true })  
+  })
+}
+
+function getReplaceValueFunction(field) {
+  const replaceValueOrFunction = field.type.options?.kaliber?.duplicate
+  return replaceValueOrFunction && (
+    typeof replaceValueOrFunction === 'function' 
+      ? replaceValueOrFunction 
+      : () => replaceValueOrFunction
+  )
 }
