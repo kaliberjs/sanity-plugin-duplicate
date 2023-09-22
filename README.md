@@ -1,93 +1,106 @@
 # Sanity plugin duplicate
-Adds (usable) duplicate document action to Sanity.
+Replaces the default duplicate function of Sanity and allows for the schema to determine how
+to handle duplication of specific fields.
 
 ## Installation
 
 ```
-> cd admin
 > yarn add @kaliber/sanity-plugin-duplicate
 ```
 
-### Adding the custom document actions
-
-To add the actual document actions, you have to add them to the default document actions. To do this, in your sanity folder create a file called `resolveDocumentActions.js` and add the following:
+_`config/default.js`_
 
 ```js
-import defaultResolve, { DuplicateAction } from 'part:@sanity/base/document-actions'
-import { DocumentActionDuplicate } from '@kaliber/sanity-plugin-duplicate'
-
-export default function resolveDocumentActions(props) {
-  return [
-    ...defaultResolve(props).map(x => x === DuplicateAction ? DocumentActionDuplicate : x),
-    DocumentActionProductionPreview,
-    DocumentActionProductionReview
-  ]
-}
-
-```
-
-Then add the `part:@sanity/base/document-actions/resolver` part to the parts array in `sanity.json`:
-
-```json
 {
-  "implements": "part:@sanity/base/document-actions/resolver",
-  "path": "./resolveDocumentActions.js"
+  kaliber: [
+    compileWithBabel: [
+      /@kaliber\/sanity-plugin-duplicate/,
+      ...
+    ],
+    ...
+  ],
+  ...
 }
 ```
 
----
-
-### Adding custom duplicate value to field
-
-You can define custom duplicate values by adding `kaliberOptions: { duplicate: ...}` to your document scheme.
+_`admin/sanity.config.js`_
 
 ```js
-const doc = {
+defineConfig({
+    ...
+
+    plugins: [
+      preview({ reportError }),
+      ...
+    ],
+})
+```
+
+Signatures of `reportError`:
+
+```ts
+(e: Error) => void
+```
+
+## Additional setup
+
+Customize duplication can be done by setting the Kaliber `duplicate` option.
+
+```js
+import { clear } from '@kaliber/sanity-plugin-duplicate'
+
+export const page = {
   type: 'document',
-  name: 'post',
+  name: 'page',
+  title: 'Page',
+  ...
   fields: [
     {
-      type: 'text',
-      name: 'title',
-      kaliberOptions: {
-        duplicate: 'fixed title'
-      }
-    },
-    {
-      type: 'number',
-      name: 'index',
-      kaliberOptions: {
-        duplicate: index => index + 1
-      }
-    },
-    {
+      title: 'My Field',
+      name: 'myField',
       type: 'string',
-      name: 'translationId',
-      kaliberOptions: {
-        duplicate: () => uuid.v4()
-      }
-    },
-    {
-      type: 'slug',
-      name: 'slug',
-      kaliberOptions: {
-        duplicate: slug => ({type: 'slug', current: `${slug.current}-duplicate`})
+      ...
+      options: {
+        kaliber: {
+          duplicate: clear,
+          ...
+        },
+        ...
       }
     }
   ]
-}
 ```
+
+The `duplicate` option allows for the following values:
+
+* A regular value, this value is used in the duplication
+* The `clear` symbol, the field is cleared (removed) during duplication
+* A function, the function is called with the current value to generate a new value
+
+Common example for things like titles:
+
+```
+  options: {
+    kaliber: {
+      duplicate(previousValue) {
+        return `${previousValue} (copy)`
+      }
+    }
+  }
+```
+
+---
 
 ## Development
 
 ```
 > yarn
 > yarn link
-> yarn watch
 ```
 
 ```
-project/admin/> yarn link @kaliber/sanity-plugin-duplicate
+project/> yarn link @kaliber/sanity-plugin-duplicate
+project/> yarn add @kaliber/sanity-plugin-duplicate@link:./node_modules/@kaliber/sanity-plugin-duplicate
 ```
 
 ## Publish
