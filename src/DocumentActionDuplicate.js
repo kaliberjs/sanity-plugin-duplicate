@@ -6,7 +6,7 @@ export function DocumentActionDuplicate({ document, schema, schemaType, getClien
   const router = useRouter()
   const [isDuplicating, setDuplicating] = React.useState(false)
   const [error, setError] = React.useState(false)
-  
+
   const documentSchema = schema.get(schemaType)
   const client = getClient({ apiVersion: '2023-09-22' })
 
@@ -28,7 +28,7 @@ export function DocumentActionDuplicate({ document, schema, schemaType, getClien
         setError(e)
       }
     },
-    dialog: error 
+    dialog: error
       ? {
         type: 'dialog',
         header: 'Problem duplicating',
@@ -51,16 +51,18 @@ async function duplicate(document, { documentSchema, client }) {
   const copy = duplicateRecursive({ object: document, objectSchema: documentSchema, includeNonDeclaredKeys: false })
 
   const created = await client.create({ ...copy, _id: 'drafts.' })
-  
+
   return { id: created._id.replace('drafts.', '') }
 }
 
 
 function duplicateRecursive({ object, objectSchema, includeNonDeclaredKeys }) {
+  if(objectSchema.type.name === 'block') return object
+
   const fromFields = Object.fromEntries(
     objectSchema.fields.flatMap(field => {
       const key = field.name
-      
+
       if (!(key in object)) return []
 
       const originalValue = object[key]
@@ -68,18 +70,17 @@ function duplicateRecursive({ object, objectSchema, includeNonDeclaredKeys }) {
       const replacementValue = replaceValue?.(originalValue)
 
       if (replacementValue === clear) return []
-
       return [[
-        key, 
+        key,
         replaceValue ? replacementValue :
-        field.type.fields ? duplicateRecursive({ 
-          object: object[key] || {}, 
-          objectSchema: field.type, 
-          includeNonDeclaredKeys: true 
+        field.type.fields ? duplicateRecursive({
+          object: object[key] || {},
+          objectSchema: field.type,
+          includeNonDeclaredKeys: true
         }) :
-        field.type.name === 'array' ? duplicateRecursiveArray({ 
-          array: object[key] || [], 
-          arraySchemas: field.type.of 
+        field.type.name === 'array' ? duplicateRecursiveArray({
+          array: object[key] || [],
+          arraySchemas: field.type.of
         }) :
         originalValue
       ]]
@@ -96,15 +97,15 @@ function duplicateRecursive({ object, objectSchema, includeNonDeclaredKeys }) {
 function duplicateRecursiveArray({ array, arraySchemas }) {
   return array.map(object => {
     const objectSchema = arraySchemas.find(objectSchema => objectSchema.name === object._type)
-    return duplicateRecursive({ object, objectSchema, includeNonDeclaredKeys: true })  
+    return duplicateRecursive({ object, objectSchema, includeNonDeclaredKeys: true })
   })
 }
 
 function getReplaceValueFunction(field) {
   const replaceValueOrFunction = field.type.options?.kaliber?.duplicate
   return replaceValueOrFunction && (
-    typeof replaceValueOrFunction === 'function' 
-      ? replaceValueOrFunction 
+    typeof replaceValueOrFunction === 'function'
+      ? replaceValueOrFunction
       : () => replaceValueOrFunction
   )
 }
