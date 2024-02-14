@@ -57,7 +57,7 @@ async function duplicate(document, { documentSchema, client }) {
 
 
 function duplicateRecursive({ object, objectSchema, includeNonDeclaredKeys }) {
-  if(!objectSchema) return object
+  if(objectSchema.type.name === 'block') return object
 
   const fromFields = Object.fromEntries(
     objectSchema.fields.flatMap(field => {
