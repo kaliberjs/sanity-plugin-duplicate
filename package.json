@@ -1,6 +1,6 @@
 {
   "name": "@kaliber/sanity-plugin-duplicate",
-  "version": "2.0.0",
+  "version": "2.0.3",
   "description": "Adds a (usable) duplicate to sanity",
   "sideEffects": false,
   "publishConfig": {
@@ -37,7 +37,7 @@
     "@kaliber/build": "^0.0.143"
   },
   "peerDependencies": {
-    "@sanity/icons": "^2.4.1",
-    "sanity": "^3.16.7"
+    "@sanity/icons": "^2.10.2",
+    "sanity": "^3.29.0"
   }
 }
