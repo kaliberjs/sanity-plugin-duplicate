@@ -1,23 +1,28 @@
 import { definePlugin } from 'sanity'
 import { DocumentActionDuplicate } from './DocumentActionDuplicate'
+/** @import { DocumentActionComponent, PluginFactory } from 'sanity' */
 
-/** @typedef {{ reportError(e: Error): void }} Options */
-export { clear } from './clear'
+const action = 'duplicate'
+
+/** @typedef {{ reportError(e: unknown): void }} Options */
 
 export const sanityPluginDuplicate = definePlugin(
-  /** @type {import('sanity').PluginFactory<Options>} */
+  /** @type {PluginFactory<Options>} */
   ({ reportError }) => ({
     name: 'sanity-plugin-duplicate',
     document: {
+      // @ts-ignore
       actions: (prev, context) => {
         const { schema, schemaType } = context
         const getClient = context.getClient.bind(context)
 
-        duplicateAction.action = 'duplicate' // allow for filtering
+        duplicateAction.action = action // allow for filtering
 
-        return prev.map(x => x.action === duplicateAction.action ? duplicateAction : x)
-          
-        /** @type {import('sanity').DocumentActionComponent} */
+        return prev.map(x => x.action === action ? duplicateAction : x)
+
+        /**
+         * @arg {Parameters<DocumentActionComponent>[0]} props
+         */
         function duplicateAction({ draft, published, onComplete }) {
           return DocumentActionDuplicate({
             document: draft || published,

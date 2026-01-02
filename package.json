@@ -18,26 +18,22 @@
   "private": false,
   "license": "MIT",
   "author": "Kaliber Machinery <machinery@kaliber.net>",
-  "main": "src/sanityPluginDuplicate.js",
+  "main": "index.js",
   "files": [
+    "index.js",
     "src/**",
-    "lib/**",
     "LICENSE",
     "README.md",
-    "package.json",
-    "sanity.json"
+    "package.json"
   ],
   "scripts": {
-    "prepare": "[ -f scripts/addPeerDependencies.js ] && node scripts/addPeerDependencies.js"
-  },
-  "dependencies": {
-    "@sanity/incompatible-plugin": "^1.0.4"
+    "postinstall": "[ -d ./scripts -a -f ./scripts/install-peer-dependencies-for-typescript.js ] && node ./scripts/install-peer-dependencies-for-typescript.js || true"
   },
   "devDependencies": {
-    "@kaliber/build": "^0.0.143"
+    "@kaliber/eslint-plugin": "^1.0.0"
   },
   "peerDependencies": {
-    "@sanity/icons": "^3.5.7",
-    "sanity": "^3.71.0"
+    "@sanity/icons": "^3.0.0",
+    "sanity": "^4.0.0"
   }
 }
