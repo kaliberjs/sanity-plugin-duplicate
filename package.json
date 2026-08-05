@@ -27,17 +27,12 @@
     "package.json",
     "sanity.json"
   ],
-  "scripts": {
-    "prepare": "[ -f scripts/addPeerDependencies.js ] && node scripts/addPeerDependencies.js"
-  },
-  "dependencies": {
-    "@sanity/incompatible-plugin": "^1.0.4"
-  },
   "devDependencies": {
-    "@kaliber/build": "^0.0.143"
+    "@kaliber/eslint-plugin": "^2.1.2",
+    "@kaliber/stylelint-plugin": "^2.1.1"
   },
   "peerDependencies": {
-    "@sanity/icons": "^3.5.7",
-    "sanity": "^3.71.0"
+    "@sanity/icons": "^5.0.0",
+    "sanity": "^6.0.0"
   }
 }
