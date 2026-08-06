@@ -1,5 +1,6 @@
-import { CopyIcon } from '@sanity/icons'
+import { CopyIcon } from '@sanity/icons/Copy'
 import { useRouter } from 'sanity/router'
+
 import { clear } from './clear'
 
 export function DocumentActionDuplicate({ document, schema, schemaType, getClient, reportError, onComplete }) {
@@ -57,8 +58,8 @@ async function duplicate(document, { documentSchema, client }) {
 
 
 function duplicateRecursive({ object, objectSchema, includeNonDeclaredKeys }) {
-  if(!objectSchema?.type) return object
-  if(objectSchema.type.name === 'block') return object
+  if (!objectSchema?.type) return object
+  if (objectSchema.type.name === 'block') return object
 
   const fromFields = Object.fromEntries(
     objectSchema.fields.flatMap(field => {
