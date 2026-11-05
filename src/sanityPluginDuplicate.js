@@ -3,6 +3,7 @@ import { DocumentActionDuplicate } from './DocumentActionDuplicate'
 
 /** @typedef {{ reportError(e: Error): void }} Options */
 export { clear } from './clear'
+export { privateDocumentTypes, privateCreateMenuItem } from './privateDocumentTypes'
 
 export const sanityPluginDuplicate = definePlugin(
   /** @type {import('sanity').PluginFactory<Options>} */
